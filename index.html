@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Oráculo E-Paper • Tarot & Estudos Simbólicos</title>
+  
+  <!-- Configurações PWA e Mobile Standalone -->
+  <meta name="theme-color" content="#f4f1eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Oráculo 1909">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fontes Editoriais E-Paper (Cinzel, Cormorant Garamond & Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            title: ['Cinzel', 'serif'],
+            serif: ['"Cormorant Garamond"', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            paper: '#f4f1eb',
+            'paper-dark': '#e6e1d6',
+            ink: '#1a1917',
+            'ink-muted': '#57534a',
+            'ink-faint': '#8c867a',
+            borderline: '#262421',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Estética E-Paper: Textura de Papel e Tinta Eletrônica */
+    body {
+      background-color: #f4f1eb;
+      color: #1a1917;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      background-image: radial-gradient(#d8d2c5 0.8px, transparent 0.8px);
+      background-size: 14px 14px;
+    }
+
+    /* Filtro E-Paper de Alto Contraste para Gravuras 1909 */
+    .epaper-art {
+      filter: grayscale(100%) contrast(130%) brightness(97%);
+      mix-blend-mode: multiply;
+      transition: filter 0.35s ease;
+    }
+    
+    .epaper-art.original-color {
+      filter: sepia(15%) contrast(105%);
+      mix-blend-mode: normal;
+    }
+
+    /* Animação 3D de Virar a Carta (Flip) */
+    .perspective-1000 {
+      perspective: 1200px;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-style: preserve-3d;
+    }
+    .card-flipped {
+      transform: rotateY(180deg);
+    }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 0.5rem;
+    }
+    .card-face-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Animação Fade-in ao Revelar */
+    @keyframes revealFade {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-reveal {
+      animation: revealFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Padrão Geométrico do Verso da Carta */
+    .tarot-back-pattern {
+      background-color: #f4f1eb;
+      background-image: 
+        radial-gradient(#1a1917 1px, transparent 1px),
+        radial-gradient(#1a1917 1px, #f4f1eb 1px);
+      background-size: 12px 12px;
+      background-position: 0 0, 6px 6px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-ink selection:text-paper">
+
+  <!-- CABEÇALHO E-PAPER -->
+  <header class="border-b-2 border-borderline py-3.5 px-4 sm:px-8 bg-paper/95 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 border-2 border-borderline flex items-center justify-center bg-paper-dark font-title font-bold text-lg">
+          ✧
+        </div>
+        <div class="text-center sm:text-left">
+          <h1 class="font-title text-lg sm:text-xl font-bold tracking-widest uppercase">Oráculo E-Paper • 1909</h1>
+          <p class="font-serif italic text-xs sm:text-sm text-ink-muted">Tarot Rider-Waite-Smith & Estudos Simbólicos</p>
+        </div>
+      </div>
+
+      <!-- Controles e Navegação -->
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <nav class="flex items-center bg-paper-dark border-2 border-borderline p-0.5 rounded text-xs font-title tracking-wider">
+          <button id="tab-daily" onclick="switchView('daily')" class="px-3 py-1.5 rounded-sm transition bg-ink text-paper font-bold">
+            Carta do Dia
+          </button>
+          <button id="tab-spread" onclick="switchView('spread')" class="px-3 py-1.5 rounded-sm transition text-ink hover:bg-paper">
+            Tiragem 3 Cartas
+          </button>
+          <button id="tab-library" onclick="switchView('library')" class="px-3 py-1.5 rounded-sm transition text-ink hover:bg-paper">
+            Compêndio (78)
+          </button>
+        </nav>
+
+        <!-- Botão de Modo E-Ink / Cor -->
+        <button onclick="toggleArtMode()" title="Alternar entre Tinta Eletrônica P&B e Cores de 1909" class="px-2.5 py-1.5 border-2 border-borderline bg-paper hover:bg-paper-dark rounded text-xs font-title tracking-wider flex items-center gap-1.5 transition">
+          <span class="w-2.5 h-2.5 rounded-full bg-ink inline-block" id="art-mode-dot"></span>
+          <span id="art-mode-label">E-Ink</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 md:p-8">
+
+    <!-- ==========================================
+         ABA 1: CARTA DO DIA (DETERMINÍSTICA)
+         ========================================== -->
+    <section id="view-daily" class="flex flex-col items-center">
+      
+      <div class="w-full text-center mb-6">
+        <div class="inline-flex items-center gap-2 border-y border-borderline py-1 px-4 mb-2">
+          <span class="text-xs">☉</span>
+          <span id="daily-date-label" class="font-title text-xs tracking-widest uppercase text-ink-muted">Carregando data...</span>
+          <span class="text-xs">☽</span>
+        </div>
+        <h2 id="daily-mode-heading" class="font-serif text-2xl sm:text-3xl italic font-semibold text-ink">Sincronicidade Diária</h2>
+        <p id="daily-mode-subtitle" class="text-xs text-ink-muted mt-1 max-w-md mx-auto">
+          Calculada pela semente matemática da data de hoje. Permanece inalterada até a meia-noite.
+        </p>
+
+        <!-- Alternar entre Carta Fixa do Dia ou Sorteio Avulso -->
+        <div class="mt-3 flex justify-center gap-2">
+          <button id="btn-restore-daily" onclick="restoreDailySeedCard()" class="hidden px-3 py-1 text-[11px] font-title uppercase tracking-wider border border-borderline bg-paper-dark hover:bg-ink hover:text-paper rounded transition">
+            ↺ Voltar para Carta Fixa de Hoje
+          </button>
+          <button onclick="drawRandomSingleCard()" class="px-3 py-1 text-[11px] font-title uppercase tracking-wider border border-borderline bg-paper hover:bg-paper-dark rounded transition">
+            ✧ Sortear Carta Avulsa de Estudo
+          </button>
+        </div>
+      </div>
+
+      <!-- CARTA INTERATIVA (INICIA VIRADA PARA BAIXO) -->
+      <div class="perspective-1000 w-64 sm:w-72 h-[420px] sm:h-[460px] mb-6 cursor-pointer select-none group" onclick="toggleDailyFlip()">
+        <div id="daily-card-inner" class="card-inner shadow-xl">
+          
+          <!-- VERSO DA CARTA (Visível Inicialmente) -->
+          <div class="card-face border-2 border-borderline bg-paper p-3 flex flex-col justify-between shadow-md group-hover:shadow-xl transition">
+            <div class="w-full h-full border-2 border-borderline tarot-back-pattern flex flex-col items-center justify-center p-5 relative">
+              <div class="bg-paper border-2 border-borderline p-5 shadow-sm flex flex-col items-center max-w-[200px]">
+                <div class="w-12 h-12 border-2 border-borderline rotate-45 flex items-center justify-center mb-4 bg-paper-dark">
+                  <span class="text-xl -rotate-45">👁</span>
+                </div>
+                <span class="font-title text-xs tracking-widest uppercase font-bold text-center text-ink">Arcano Velado</span>
+                <div class="w-8 border-b border-borderline my-2"></div>
+                <span class="font-serif italic text-xs text-ink-muted text-center">Toque na lâmina para revelar</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- FRENTE DA CARTA (Oculta até o clique) -->
+          <div class="card-face card-face-back border-2 border-borderline bg-paper flex flex-col overflow-hidden shadow-md">
+            <div class="px-3 py-1.5 border-b border-borderline bg-paper-dark flex justify-between items-center text-[11px] font-title uppercase tracking-wider">
+              <span id="daily-card-number" class="font-bold">--</span>
+              <span id="daily-card-suit-badge" class="text-ink-muted">--</span>
+            </div>
+            <div class="flex-1 overflow-hidden relative flex items-center justify-center bg-white p-2">
+              <img id="daily-card-img" src="" alt="Arcano do Dia" class="epaper-art w-full h-full object-contain" />
+            </div>
+            <div class="p-2.5 border-t border-borderline bg-paper text-center">
+              <h3 id="daily-card-name" class="font-title text-sm sm:text-base font-bold tracking-wider uppercase">--</h3>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- AVISO ANTES DE REVELAR (Visível apenas quando a carta está virada para baixo) -->
+      <div id="daily-unrevealed-prompt" class="w-full max-w-md text-center py-4 px-6 border border-dashed border-borderline bg-paper-dark/60 rounded-lg mb-6">
+        <p class="font-serif italic text-base text-ink">
+          "Toque na carta acima para revelar o arcano de hoje e sua mensagem."
+        </p>
+        <p class="text-[11px] font-title uppercase tracking-widest text-ink-muted mt-1">
+          O significado permanece oculto até a abertura da lâmina
+        </p>
+      </div>
+
+      <!-- DETALHES INTERPRETATIVOS (ESTRITAMENTE OCULTOS ATÉ VIRAR A CARTA) -->
+      <div id="daily-card-details" style="display: none;" class="w-full max-w-2xl bg-paper border-2 border-borderline p-6 sm:p-8 rounded-lg shadow-md mb-8">
+        <div class="flex flex-wrap items-start justify-between border-b-2 border-borderline pb-4 mb-5 gap-3">
+          <div>
+            <span id="detail-type" class="text-xs uppercase font-title tracking-widest text-ink-muted block">--</span>
+            <h3 id="detail-name" class="font-title text-2xl sm:text-3xl font-bold text-ink mt-0.5">--</h3>
+          </div>
+          <span id="detail-element-pill" class="text-xs font-title uppercase tracking-wider border border-borderline bg-paper-dark px-3 py-1 rounded">
+            --
+          </span>
+        </div>
+
+        <!-- Palavras-Chave -->
+        <div class="mb-5 p-3.5 bg-paper-dark rounded border border-borderline">
+          <span class="font-title text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Palavras-Chave & Eixos deForça</span>
+          <p id="detail-keywords" class="font-semibold text-sm text-ink">--</p>
+        </div>
+
+        <!-- Textos de Estudo -->
+        <div class="space-y-5">
+          <div>
+            <h4 class="font-title text-xs tracking-widest uppercase text-ink-muted mb-1.5 flex items-center gap-1.5">
+              <span>✦</span> Significado & Arquétipo Simbólico
+            </h4>
+            <p id="detail-meaning" class="font-serif text-lg sm:text-xl leading-relaxed text-ink">
+              --
+            </p>
+          </div>
+
+          <div class="border-t border-borderline/30 pt-4">
+            <h4 class="font-title text-xs tracking-widest uppercase text-ink-muted mb-1.5 flex items-center gap-1.5">
+              <span>🕯</span> Reflexão & Conselho Prático
+            </h4>
+            <p id="detail-advice" class="font-serif italic text-lg leading-relaxed text-ink-muted">
+              --
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==========================================
+         ABA 2: TIRAGEM DE 3 CARTAS (PASSADO, PRESENTE, FUTURO)
+         ========================================== -->
+    <section id="view-spread" class="hidden flex-col items-center">
+      
+      <div class="w-full text-center mb-6">
+        <h2 class="font-serif text-2xl sm:text-3xl italic font-semibold text-ink">Tiragem das Três Fases</h2>
+        <p class="text-xs sm:text-sm text-ink-muted mt-1 max-w-xl mx-auto">
+          Concentre-se na questão. As três cartas são dispostas ocultas; toque individualmente em cada lâmina para revelar seu significado no seu próprio ritmo.
+        </p>
+        
+        <div class="mt-4 flex flex-wrap justify-center gap-3">
+          <button onclick="drawThreeSpread()" class="px-4 py-2 bg-ink text-paper font-title text-xs tracking-widest uppercase rounded hover:bg-ink/90 border-2 border-borderline transition shadow-sm">
+            ↻ Nova Tiragem (Embaralhar)
+          </button>
+          <button onclick="revealAllSpreadCards()" class="px-4 py-2 bg-paper text-ink font-title text-xs tracking-widest uppercase rounded hover:bg-paper-dark border-2 border-borderline transition shadow-sm">
+            👁 Revelar Todas
+          </button>
+        </div>
+      </div>
+
+      <!-- GRID DAS 3 CARTAS -->
+      <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
+        <!-- CARTA 1: PASSADO / RAIZ -->
+        <div class="flex flex-col items-center">
+          <div class="w-full border-y border-borderline py-1 px-3 mb-3 text-center bg-paper-dark/50">
+            <span class="font-title text-xs uppercase tracking-widest font-bold">I. Passado / Causa</span>
+          </div>
+          
+          <div class="perspective-1000 w-56 h-80 sm:h-88 cursor-pointer select-none mb-4" onclick="flipSpreadCard(0)">
+            <div id="spread-card-inner-0" class="card-inner shadow-md">
+              <!-- Verso -->
+              <div class="card-face border-2 border-borderline bg-paper p-2.5 flex">
+                <div class="w-full h-full border border-borderline tarot-back-pattern flex items-center justify-center p-3">
+                  <div class="bg-paper border border-borderline px-3 py-2 text-center shadow-sm">
+                    <span class="font-title text-[11px] uppercase tracking-widest block font-bold">Posição I</span>
+                    <span class="font-serif italic text-xs text-ink-muted">Toque p/ abrir</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Frente -->
+              <div class="card-face card-face-back border-2 border-borderline bg-paper flex flex-col overflow-hidden">
+                <div class="px-2 py-1 border-b border-borderline bg-paper-dark flex justify-between text-[10px] font-title uppercase">
+                  <span id="spread-num-0">--</span>
+                  <span id="spread-suit-0">--</span>
+                </div>
+                <div class="flex-1 bg-white flex items-center justify-center p-1.5 overflow-hidden">
+                  <img id="spread-img-0" src="" alt="Carta 1" class="epaper-art w-full h-full object-contain" />
+                </div>
+                <div class="p-1.5 border-t border-borderline bg-paper text-center">
+                  <span id="spread-card-title-0" class="font-title text-xs font-bold uppercase block truncate">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caixa de Texto 1: Oculta inicialmente -->
+          <div id="spread-prompt-0" class="w-full p-3 border border-dashed border-borderline bg-paper-dark/40 rounded text-center">
+            <span class="font-serif italic text-sm text-ink-muted">Carta Oculta — Toque para revelar</span>
+          </div>
+          <div id="spread-details-0" style="display: none;" class="w-full p-4 bg-paper border-2 border-borderline rounded shadow-sm space-y-2">
+            <div class="border-b border-borderline pb-1.5">
+              <h4 id="spread-name-0" class="font-title text-sm font-bold uppercase text-ink">--</h4>
+              <span id="spread-element-0" class="text-[10px] font-title uppercase text-ink-muted block">--</span>
+            </div>
+            <p id="spread-keywords-0" class="text-xs font-semibold text-ink bg-paper-dark p-1.5 rounded border border-borderline/40">--</p>
+            <p id="spread-meaning-0" class="font-serif text-base text-ink leading-snug">--</p>
+            <p id="spread-advice-0" class="font-serif italic text-sm text-ink-muted border-t border-borderline/30 pt-1.5">--</p>
+          </div>
+        </div>
+
+        <!-- CARTA 2: PRESENTE / MOMENTO -->
+        <div class="flex flex-col items-center">
+          <div class="w-full border-y border-borderline py-1 px-3 mb-3 text-center bg-paper-dark/50">
+            <span class="font-title text-xs uppercase tracking-widest font-bold">II. Presente / Ação</span>
+          </div>
+          
+          <div class="perspective-1000 w-56 h-80 sm:h-88 cursor-pointer select-none mb-4" onclick="flipSpreadCard(1)">
+            <div id="spread-card-inner-1" class="card-inner shadow-md">
+              <!-- Verso -->
+              <div class="card-face border-2 border-borderline bg-paper p-2.5 flex">
+                <div class="w-full h-full border border-borderline tarot-back-pattern flex items-center justify-center p-3">
+                  <div class="bg-paper border border-borderline px-3 py-2 text-center shadow-sm">
+                    <span class="font-title text-[11px] uppercase tracking-widest block font-bold">Posição II</span>
+                    <span class="font-serif italic text-xs text-ink-muted">Toque p/ abrir</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Frente -->
+              <div class="card-face card-face-back border-2 border-borderline bg-paper flex flex-col overflow-hidden">
+                <div class="px-2 py-1 border-b border-borderline bg-paper-dark flex justify-between text-[10px] font-title uppercase">
+                  <span id="spread-num-1">--</span>
+                  <span id="spread-suit-1">--</span>
+                </div>
+                <div class="flex-1 bg-white flex items-center justify-center p-1.5 overflow-hidden">
+                  <img id="spread-img-1" src="" alt="Carta 2" class="epaper-art w-full h-full object-contain" />
+                </div>
+                <div class="p-1.5 border-t border-borderline bg-paper text-center">
+                  <span id="spread-card-title-1" class="font-title text-xs font-bold uppercase block truncate">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caixa de Texto 2: Oculta inicialmente -->
+          <div id="spread-prompt-1" class="w-full p-3 border border-dashed border-borderline bg-paper-dark/40 rounded text-center">
+            <span class="font-serif italic text-sm text-ink-muted">Carta Oculta — Toque para revelar</span>
+          </div>
+          <div id="spread-details-1" style="display: none;" class="w-full p-4 bg-paper border-2 border-borderline rounded shadow-sm space-y-2">
+            <div class="border-b border-borderline pb-1.5">
+              <h4 id="spread-name-1" class="font-title text-sm font-bold uppercase text-ink">--</h4>
+              <span id="spread-element-1" class="text-[10px] font-title uppercase text-ink-muted block">--</span>
+            </div>
+            <p id="spread-keywords-1" class="text-xs font-semibold text-ink bg-paper-dark p-1.5 rounded border border-borderline/40">--</p>
+            <p id="spread-meaning-1" class="font-serif text-base text-ink leading-snug">--</p>
+            <p id="spread-advice-1" class="font-serif italic text-sm text-ink-muted border-t border-borderline/30 pt-1.5">--</p>
+          </div>
+        </div>
+
+        <!-- CARTA 3: FUTURO / TENDÊNCIA -->
+        <div class="flex flex-col items-center">
+          <div class="w-full border-y border-borderline py-1 px-3 mb-3 text-center bg-paper-dark/50">
+            <span class="font-title text-xs uppercase tracking-widest font-bold">III. Futuro / Conselho</span>
+          </div>
+          
+          <div class="perspective-1000 w-56 h-80 sm:h-88 cursor-pointer select-none mb-4" onclick="flipSpreadCard(2)">
+            <div id="spread-card-inner-2" class="card-inner shadow-md">
+              <!-- Verso -->
+              <div class="card-face border-2 border-borderline bg-paper p-2.5 flex">
+                <div class="w-full h-full border border-borderline tarot-back-pattern flex items-center justify-center p-3">
+                  <div class="bg-paper border border-borderline px-3 py-2 text-center shadow-sm">
+                    <span class="font-title text-[11px] uppercase tracking-widest block font-bold">Posição III</span>
+                    <span class="font-serif italic text-xs text-ink-muted">Toque p/ abrir</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Frente -->
+              <div class="card-face card-face-back border-2 border-borderline bg-paper flex flex-col overflow-hidden">
+                <div class="px-2 py-1 border-b border-borderline bg-paper-dark flex justify-between text-[10px] font-title uppercase">
+                  <span id="spread-num-2">--</span>
+                  <span id="spread-suit-2">--</span>
+                </div>
+                <div class="flex-1 bg-white flex items-center justify-center p-1.5 overflow-hidden">
+                  <img id="spread-img-2" src="" alt="Carta 3" class="epaper-art w-full h-full object-contain" />
+                </div>
+                <div class="p-1.5 border-t border-borderline bg-paper text-center">
+                  <span id="spread-card-title-2" class="font-title text-xs font-bold uppercase block truncate">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caixa de Texto 3: Oculta inicialmente -->
+          <div id="spread-prompt-2" class="w-full p-3 border border-dashed border-borderline bg-paper-dark/40 rounded text-center">
+            <span class="font-serif italic text-sm text-ink-muted">Carta Oculta — Toque para revelar</span>
+          </div>
+          <div id="spread-details-2" style="display: none;" class="w-full p-4 bg-paper border-2 border-borderline rounded shadow-sm space-y-2">
+            <div class="border-b border-borderline pb-1.5">
+              <h4 id="spread-name-2" class="font-title text-sm font-bold uppercase text-ink">--</h4>
+              <span id="spread-element-2" class="text-[10px] font-title uppercase text-ink-muted block">--</span>
+            </div>
+            <p id="spread-keywords-2" class="text-xs font-semibold text-ink bg-paper-dark p-1.5 rounded border border-borderline/40">--</p>
+            <p id="spread-meaning-2" class="font-serif text-base text-ink leading-snug">--</p>
+            <p id="spread-advice-2" class="font-serif italic text-sm text-ink-muted border-t border-borderline/30 pt-1.5">--</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         ABA 3: COMPÊNDIO DE ESTUDO (78 CARTAS)
+         ========================================== -->
+    <section id="view-library" class="hidden flex-col">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b-2 border-borderline pb-4">
+        <div>
+          <h2 class="font-serif text-2xl sm:text-3xl italic font-semibold text-ink">Compêndio dos 78 Arcanos</h2>
+          <p class="text-xs text-ink-muted">Toque em qualquer lâmina para abrir a ficha completa de estudo simbólico</p>
+        </div>
+
+        <!-- Filtros por Naipe / Arcanos -->
+        <div class="flex flex-wrap gap-1.5 text-xs font-title">
+          <button onclick="filterLibrary('all')" id="filter-all" class="px-3 py-1.5 border border-borderline rounded bg-ink text-paper">Todos (78)</button>
+          <button onclick="filterLibrary('major')" id="filter-major" class="px-3 py-1.5 border border-borderline rounded bg-paper hover:bg-paper-dark">Maiores (22)</button>
+          <button onclick="filterLibrary('wands')" id="filter-wands" class="px-3 py-1.5 border border-borderline rounded bg-paper hover:bg-paper-dark">Paus • Fogo</button>
+          <button onclick="filterLibrary('cups')" id="filter-cups" class="px-3 py-1.5 border border-borderline rounded bg-paper hover:bg-paper-dark">Copas • Água</button>
+          <button onclick="filterLibrary('swords')" id="filter-swords" class="px-3 py-1.5 border border-borderline rounded bg-paper hover:bg-paper-dark">Espadas • Ar</button>
+          <button onclick="filterLibrary('pentacles')" id="filter-pentacles" class="px-3 py-1.5 border border-borderline rounded bg-paper hover:bg-paper-dark">Ouros • Terra</button>
+        </div>
+      </div>
+
+      <!-- Barra de Busca -->
+      <div class="mb-6">
+        <input type="text" id="library-search" oninput="searchLibrary(this.value)" 
+               placeholder="Pesquisar por nome da carta, elemento, regência ou palavra-chave (ex: 'Eremita', 'Enamorados', '9 de Paus', 'Intuição')..." 
+               class="w-full px-4 py-2.5 border-2 border-borderline bg-paper text-ink rounded text-sm placeholder:text-ink-faint focus:outline-none focus:bg-white transition">
+      </div>
+
+      <!-- Grid das 78 Cartas -->
+      <div id="library-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Preenchido via JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE FICHA DE ESTUDO (COMPÊNDIO) -->
+  <div id="modal-card" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs hidden items-center justify-center p-4" onclick="if(event.target === this) closeModal()">
+    <div class="bg-paper border-2 border-borderline max-w-xl w-full rounded-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-reveal">
+      <div class="px-4 py-3 border-b-2 border-borderline bg-paper-dark flex justify-between items-center">
+        <span id="modal-card-category" class="font-title text-xs uppercase tracking-widest font-bold text-ink">--</span>
+        <button onclick="closeModal()" class="w-7 h-7 flex items-center justify-center border border-borderline bg-paper rounded hover:bg-ink hover:text-paper font-bold transition">&times;</button>
+      </div>
+      
+      <div class="p-6 overflow-y-auto space-y-5">
+        <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
+          <div class="w-40 h-64 border-2 border-borderline shrink-0 bg-white p-1.5 shadow">
+            <img id="modal-card-img" src="" alt="Carta" class="epaper-art w-full h-full object-contain" />
+          </div>
+          <div class="flex-1 text-center sm:text-left">
+            <h3 id="modal-card-title" class="font-title text-2xl font-bold text-ink">--</h3>
+            <p id="modal-card-element" class="text-xs font-title uppercase tracking-wider text-ink-muted mt-1 border-b border-borderline/40 pb-2">--</p>
+            <div class="mt-3 bg-paper-dark p-3 rounded border border-borderline/50">
+              <span class="font-title text-[10px] uppercase tracking-widest text-ink-muted block">Palavras-Chave</span>
+              <p id="modal-card-keywords" class="text-xs font-semibold text-ink mt-1">--</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t-2 border-borderline pt-4 space-y-4">
+          <div>
+            <h4 class="font-title text-xs tracking-widest uppercase text-ink-muted">Significado & Estudo Arquetípico</h4>
+            <p id="modal-card-desc" class="font-serif text-lg text-ink leading-relaxed mt-1">--</p>
+          </div>
+          <div class="bg-paper-dark/60 p-3.5 rounded border border-borderline/40">
+            <h4 class="font-title text-xs tracking-widest uppercase text-ink-muted">Conselho & Meditação</h4>
+            <p id="modal-card-advice" class="font-serif italic text-base text-ink leading-normal mt-1">--</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 py-3 border-t border-borderline bg-paper-dark flex justify-end">
+        <button onclick="closeModal()" class="px-5 py-1.5 border-2 border-borderline bg-ink text-paper font-title text-xs uppercase tracking-wider rounded hover:bg-ink/80 transition">
+          Fechar Ficha
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer class="border-t-2 border-borderline py-4 px-4 text-center text-xs text-ink-muted bg-paper-dark mt-12">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p class="font-serif italic text-sm">Arte canônica de 1909 por Pamela Colman Smith & Arthur Edward Waite</p>
+      <p class="font-title text-[10px] tracking-widest uppercase">Oráculo E-Paper • 78 Lâminas</p>
+    </div>
+  </footer>
+
+  <!-- ==========================================
+       LÓGICA & BASE DE DADOS COMPLETA (78 CARTAS)
+       ========================================== -->
+  <script>
+    // Repositório canônico estável em domínio público (Sacred Texts PKT 1909)
+    const IMG_BASE = "https://www.sacred-texts.com/tarot/pkt/img/";
+
+    // Gerador de Gravura SVG E-Paper de Fallback (Nunca permite imagem quebrada mesmo sem internet)
+    function createFallbackSVG(cardName, cardNum, element) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 500" width="300" height="500">
+        <rect width="300" height="500" fill="#f4f1eb" stroke="#1a1917" stroke-width="8"/>
+        <rect x="14" y="14" width="272" height="472" fill="none" stroke="#1a1917" stroke-width="2"/>
+        <circle cx="150" cy="210" r="65" fill="none" stroke="#1a1917" stroke-width="2" stroke-dasharray="4,4"/>
+        <polygon points="150,155 195,235 105,235" fill="none" stroke="#1a1917" stroke-width="1.5"/>
+        <polygon points="150,265 195,185 105,185" fill="none" stroke="#1a1917" stroke-width="1.5"/>
+        <text x="150" y="65" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#1a1917" text-anchor="middle">${cardNum}</text>
+        <text x="150" y="218" font-family="Georgia, serif" font-size="28" fill="#1a1917" text-anchor="middle">✧</text>
+        <text x="150" y="365" font-family="Georgia, serif" font-size="18" font-weight="bold" fill="#1a1917" text-anchor="middle">${cardName}</text>
+        <text x="150" y="395" font-family="Georgia, serif" font-size="12" font-style="italic" fill="#57534a" text-anchor="middle">${element}</text>
+      </svg>`;
+      return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+    }
+
+    function attachImageWithFallback(imgElement, card) {
+      imgElement.onerror = function() {
+        this.onerror = null;
+        this.src = createFallbackSVG(card.name, card.num, card.element.split('/')[0]);
+      };
+      imgElement.src = card.img;
+    }
+
+    // ==========================================
+    // OS 22 ARCANOS MAIORES
+    // ==========================================
+    const TAROT_DECK = [
+      {
+        id: "ar00", num: "0", name: "O Louco", suit: "major",
+        element: "Ar / Urano • Espírito Livre",
+        keywords: "Início espontâneo, salto de fé, pureza, potencial aberto, desapego",
+        reflection: "O Louco caminha à beira do precipício olhando para o céu. Representa o espírito antes de se moldar às convenções, aberto ao chamado da jornada sem medo do desconhecido.",
+        advice: "Permita-se dar o primeiro passo com confiança intuitiva, sem exigir todas as garantias antecipadas.",
+        img: IMG_BASE + "ar00.jpg"
+      },
+      {
+        id: "ar01", num: "I", name: "O Mago", suit: "major",
+        element: "Ar / Mercúrio • Vontade Criadora",
+        keywords: "Manifestação, iniciativa, habilidade, poder da palavra, canalização",
+        reflection: "Com uma mão apontada para o alto e outra para a terra, o Mago une o plano espiritual ao material. Os quatro elementos estão sobre a mesa prontos para a ação consciente.",
+        advice: "Você já dispõe dos instrumentos necessários. Concentre sua vontade e inicie a realização prática.",
+        img: IMG_BASE + "ar01.jpg"
+      },
+      {
+        id: "ar02", num: "II", name: "A Sacerdotisa", suit: "major",
+        element: "Água / Lua • Mistério & Mediunidade",
+        keywords: "Intuição profunda, silêncio fértil, sabedoria oculta, percepção sutil",
+        reflection: "Sentada entre as colunas da dualidade (Boaz e Jachin), ela guarda o véu do templo interior. É o arquétipo da escuta espiritual, dos sonhos e da verdade que se sente em silêncio.",
+        advice: "Não force respostas pela pressa externa. Recolha-se, observe os sinais sutis e confie na sua intuição.",
+        img: IMG_BASE + "ar02.jpg"
+      },
+      {
+        id: "ar03", num: "III", name: "A Imperatriz", suit: "major",
+        element: "Terra / Vênus • Natureza Fértil",
+        keywords: "Fecundidade, abundância, criatividade, nutrição materna, vitalidade",
+        reflection: "Rodeada pela natureza exuberante e pelo trigo maduro, a Imperatriz rege a geração da vida, o cuidado afetuoso e o florescimento concreto das ideias no mundo.",
+        advice: "Nutra seus projetos e seu corpo com carinho, beleza e paciência; o crescimento é orgânico.",
+        img: IMG_BASE + "ar03.jpg"
+      },
+      {
+        id: "ar04", num: "IV", name: "O Imperador", suit: "major",
+        element: "Fogo / Áries • Estrutura & Ordem",
+        keywords: "Estabilidade, autoridade justa, proteção, limites claros, alicerce",
+        reflection: "Em seu trono de pedra, o Imperador sustenta a ordem civilizatória e a firmeza necessária para que os projetos resistam ao tempo.",
+        advice: "Organize sua rotina, defina limites saudáveis e governe suas escolhas com firmeza e responsabilidade.",
+        img: IMG_BASE + "ar04.jpg"
+      },
+      {
+        id: "ar05", num: "V", name: "O Hierofante", suit: "major",
+        element: "Terra / Touro • Tradição & Fundamento",
+        keywords: "Ensino espiritual, linhagem, ética, estudo sistemático, rito sagrado",
+        reflection: "O mestre que transmite as chaves do conhecimento ancestral. Representa o valor do estudo sério, do respeito aos fundamentos e da conexão com a egrégora espiritual.",
+        advice: "Honre seus estudos e busque a sabedoria acumulada das tradições antes de romper regras ao acaso.",
+        img: IMG_BASE + "ar05.jpg"
+      },
+      {
+        id: "ar06", num: "VI", name: "Os Enamorados", suit: "major",
+        element: "Ar / Gêmeos • Escolha & Harmonia",
+        keywords: "Aliança consciente, encruzilhada ética, união de opostos, afeto verdadeiro",
+        reflection: "Sob a bênção do anjo Rafael, o encontro humano exige discernimento e entrega. Mais do que paixão, aponta o compromisso da alma com aquilo que ela escolhe amar.",
+        advice: "Tome decisões alinhadas com seus valores mais íntimos, unindo razão e coração sem divisão.",
+        img: IMG_BASE + "ar06.jpg"
+      },
+      {
+        id: "ar07", num: "VII", name: "O Carro", suit: "major",
+        element: "Água / Câncer • Direção & Vitória",
+        keywords: "Determinação, domínio emocional, avanço seguro, superação de obstáculos",
+        reflection: "O auriga conduz duas esfinges de cores opostas sem usar rédeas físicas, apenas pela força do seu eixo mental e espiritual alinhado.",
+        advice: "Mantenha o foco na meta e harmonize forças internas divergentes para avançar com decisão.",
+        img: IMG_BASE + "ar07.jpg"
+      },
+      {
+        id: "ar08", num: "VIII", name: "A Força", suit: "major",
+        element: "Fogo / Leão • Domínio Suave",
+        keywords: "Coragem serena, autocontrole, compaixão firme, transmutação do instinto",
+        reflection: "A mulher fecha suavemente as fauces do leão sob o símbolo do infinito. A verdadeira fortaleza não usa de violência, mas de presença amorosa e inabalável.",
+        advice: "Acalme impulsos reativos com serenidade e paciência; sua doçura consciente é sua maior potência.",
+        img: IMG_BASE + "ar08.jpg"
+      },
+      {
+        id: "ar09", num: "IX", name: "O Eremita", suit: "major",
+        element: "Terra / Virgem • Luz Interior",
+        keywords: "Introspecção, prudência, maturidade, busca da verdade, mestre silencioso",
+        reflection: "No alto da montanha gelada, o Eremita ergue a lanterna que contém a estrela de seis pontas. Ele ilumina um passo por vez com a sabedoria colhida no silêncio.",
+        advice: "Afaste-se temporariamente da agitação alheia para escutar sua própria voz interior e estudar com calma.",
+        img: IMG_BASE + "ar09.jpg"
+      },
+      {
+        id: "ar10", num: "X", name: "A Roda da Fortuna", suit: "major",
+        element: "Fogo / Júpiter • Ciclos do Destino",
+        keywords: "Movimento, reviravolta, sincronicidade, impermanência, oportunidade",
+        reflection: "Rodeada pelos quatro seres viventes do cosmos, a Roda gira incessantemente. Quem compreende o centro imóvel não se desespera na descida nem se envaidece na subida.",
+        advice: "Aceite a mudança de fase com flexibilidade e aproveite o vento favorável das sincronicidades.",
+        img: IMG_BASE + "ar10.jpg"
+      },
+      {
+        id: "ar11", num: "XI", name: "A Justiça", suit: "major",
+        element: "Ar / Libra • Equilíbrio & Lei",
+        keywords: "Imparcialidade, colheita justa, verdade nua, responsabilidade, retidão",
+        reflection: "Com a espada erguida e a balança equilibrada, a Justiça reflete a harmonia cósmica onde cada ação gera sua consequência exata.",
+        advice: "Aja com absoluta transparência e avalie os fatos sem deixar que emoções turvem o que é justo.",
+        img: IMG_BASE + "ar11.jpg"
+      },
+      {
+        id: "ar12", num: "XII", name: "O Enforcado", suit: "major",
+        element: "Água / Netuno • Pausa Iluminada",
+        keywords: "Novo olhar, rendição consciente, gestação espiritual, desapego do ego",
+        reflection: "Suspenso pelo pé, mas com a cabeça envolta por um halo de luz, ele enxerga o mundo por um ângulo que os apressados jamais veem.",
+        advice: "Aceite a pausa necessária. Não force portas fechadas; mude sua perspectiva interna sobre a questão.",
+        img: IMG_BASE + "ar12.jpg"
+      },
+      {
+        id: "ar13", num: "XIII", name: "A Morte", suit: "major",
+        element: "Água / Escorpião • Transmutação",
+        keywords: "Encerramento de ciclo, limpeza profunda, renascimento, desapego",
+        reflection: "Ao fundo da lâmina, o sol nasce radiante entre duas torres. O esqueleto ceifa apenas o que já cumpriu seu tempo para que a vida nova possa brotar.",
+        advice: "Deixe ir o que já secou. A renovação exige abrir espaço físico e energético para o novo ciclo.",
+        img: IMG_BASE + "ar13.jpg"
+      },
+      {
+        id: "ar14", num: "XIV", name: "A Temperança", suit: "major",
+        element: "Fogo / Sagitário • Alquimia & Cura",
+        keywords: "Harmonia, moderação, fluido curativo, paciência, integração",
+        reflection: "O anjo transvasa a água da vida entre duas taças, com um pé na terra e outro na água. É a arte de equilibrar energias opostas com serenidade espiritual.",
+        advice: "Busque o caminho do meio, exercite a paciência e promova a reconciliação e a cura do ambiente.",
+        img: IMG_BASE + "ar14.jpg"
+      },
+      {
+        id: "ar15", num: "XV", name: "O Diabo", suit: "major",
+        element: "Terra / Capricórnio • Sombra & Instinto",
+        keywords: "Apego material, ilusão de prisão, desejo intenso, reconhecimento da sombra",
+        reflection: "As correntes no pescoço das duas figuras são largas e frouxas: elas permanecem presas apenas porque esqueceram sua própria liberdade espiritual.",
+        advice: "Examine com lucidez onde você está entregando seu poder a medos, excessos ou dependências.",
+        img: IMG_BASE + "ar15.jpg"
+      },
+      {
+        id: "ar16", num: "XVI", name: "A Torre", suit: "major",
+        element: "Fogo / Marte • Despertar Súbito",
+        keywords: "Quebra de ilusões, libertação drástica, verdade repentina, reconstrução",
+        reflection: "O raio divino atinge a coroa no topo da construção rígida. Quando uma estrutura se torna uma prisão para a alma, a vida rompe a casca para libertar a essência.",
+        advice: "Acolha a queda de velhas certezas como uma limpeza libertadora; reconstrua sobre bases reais.",
+        img: IMG_BASE + "ar16.jpg"
+      },
+      {
+        id: "ar17", num: "XVII", name: "A Estrela", suit: "major",
+        element: "Ar / Aquário • Esperança & Guia",
+        keywords: "Renovação da fé, paz após a tempestade, proteção espiritual, inspiração",
+        reflection: "Despida de artifícios sob o céu estrelado, a jovem devolve água ao rio e à terra. É a bênção da assistência espiritual, da pureza e da calma restaurada.",
+        advice: "Confie na proteção superior, banhe sua mente em pensamentos luminosos e mantenha a esperança viva.",
+        img: IMG_BASE + "ar17.jpg"
+      },
+      {
+        id: "ar18", num: "XVIII", name: "A Lua", suit: "major",
+        element: "Água / Peixes • Profundezas da Alma",
+        keywords: "Subconsciente, sonhos, mediunidade profunda, cautela com miragens",
+        reflection: "A trilha serpenteia entre o cão e o lobo sob o luar. Convida a atravessar os receios ocultos da psique até alcançar a clareza da consciência superior.",
+        advice: "Observe seus sonhos e pressentimentos, mas caminhe devagar para não confundir medos com fatos.",
+        img: IMG_BASE + "ar18.jpg"
+      },
+      {
+        id: "ar19", num: "XIX", name: "O Sol", suit: "major",
+        element: "Fogo / Sol • Plenitude & Clareza",
+        keywords: "Alegria, vitalidade, verdade revelada, êxito, calor fraterno",
+        reflection: "A criança cavalga livre sob o sol radiante e os girassóis abertos. Não há sombras nem dúvidas: é a celebração da consciência desperta e generosa.",
+        advice: "Expresse sua luz com alegria e simplicidade; o momento favorece a clareza, a saúde e o entendimento.",
+        img: IMG_BASE + "ar19.jpg"
+      },
+      {
+        id: "ar20", num: "XX", name: "O Julgamento", suit: "major",
+        element: "Fogo / Plutão • Chamado Espiritual",
+        keywords: "Despertar vocacional, redenção, libertação do passado, síntese",
+        reflection: "O som da trombeta celeste desperta as almas para uma nova dimensão de consciência. O passado é compreendido, perdoado e integrado.",
+        advice: "Escute o chamado da sua missão maior; liberte-se de antigas culpas e assuma sua renovação.",
+        img: IMG_BASE + "ar20.jpg"
+      },
+      {
+        id: "ar21", num: "XXI", name: "O Mundo", suit: "major",
+        element: "Terra / Saturno • Realização Plena",
+        keywords: "Conclusão vitoriosa, totalidade, harmonia dos 4 elementos, coroamento",
+        reflection: "Dentro da guirlanda sagrada, a dançarina celebra a integração perfeita entre espírito, mente, emoção e matéria.",
+        advice: "Honre e celebre o ciclo que se completa com maestria antes de iniciar uma nova espiral evolutiva.",
+        img: IMG_BASE + "ar21.jpg"
+      }
+    ];
+
+    // ==========================================
+    // OS 56 ARCANOS MENORES (PAUS, COPAS, ESPADAS, OUROS)
+    // ==========================================
+    const MINOR_SUITS = [
+      {
+        suit: "wands",
+        suitName: "Paus",
+        prefix: "wa",
+        element: "Fogo • Vontade, Espiritualidade & Ação",
+        cards: [
+          { code: "ac", num: "Ás", name: "Ás de Paus", kw: "Centelha divina, novo entusiasmo, força vital, inspiração ígnea", ref: "A mão emerge da nuvem segurando o bastão vivo que brota. É o fogo primordial da criação e da coragem.", adv: "Agarre a inspiração que surge agora e dê início ao projeto com vigor." },
+          { code: "02", num: "II", name: "2 de Paus", kw: "Planejamento, visão de futuro, escolha de caminho, ousadia", ref: "Com o globo nas mãos no alto do castelo, contempla-se o horizonte antes da grande expedição.", adv: "Amplie seus horizontes e planeje os próximos passos com visão estratégica." },
+          { code: "03", num: "III", name: "3 de Paus", kw: "Expansão, navios em movimento, progresso inicial, confiança", ref: "Do alto do penhasco, observa-se os navios navegando em águas abertas: os esforços começam a ganhar distância.", adv: "Mantenha a visão ampla; o que você lançou ao mundo já está em movimento." },
+          { code: "04", num: "IV", name: "4 de Paus", kw: "Celebração, colheita feliz, paz no lar, alicerce comunitário", ref: "Quatro bastões adornados com flores celebram a harmonia conquistada, a união fraterna e o abrigo seguro.", adv: "Agradeça e celebre as conquistas atuais junto daqueles que caminham com você." },
+          { code: "05", num: "V", name: "5 de Paus", kw: "Disputa de forças, treino, debate acalorado, superação", ref: "Cinco jovens brandem seus bastões em um embate dinâmico que testa habilidades sem hostilidade destrutiva.", adv: "Canalize a competitividade ou o atrito externo como estímulo para aprimorar sua postura." },
+          { code: "06", num: "VI", name: "6 de Paus", kw: "Vitória honrada, reconhecimento, liderança positiva, mérito", ref: "Coroado de louros, o cavaleiro avança reconhecido pela comunidade após superar a provação.", adv: "Receba o reconhecimento com nobreza e continue inspirando pelo exemplo." },
+          { code: "07", num: "VII", name: "7 de Paus", kw: "Firmeza de posição, defesa da fé, coragem perante desafios", ref: "Em terreno elevado, o homem sustenta sua posição contra seis bastões que sobem.", adv: "Não abra mão dos seus princípios; sua integridade garante a vantagem moral." },
+          { code: "08", num: "VIII", name: "8 de Paus", kw: "Rapidez, mensagens urgentes, sincronicidade veloz, movimento livre", ref: "Oito bastões cortam o céu limpo em direção ao solo sem nenhum obstáculo à frente.", adv: "Aja com prontidão: as respostas e acontecimentos se aceleram positivamente." },
+          { code: "09", num: "IX", name: "9 de Paus", kw: "Resiliência, guardião experiente, força na reta final, vigilância", ref: "Mesmo marcado pelas batalhas anteriores, o guardião permanece firme apoiado em seu bastão, pronto para proteger sua conquista.", adv: "Você está muito perto da conclusão; mantenha a guarda serena e confie na sua resistência." },
+          { code: "10", num: "X", name: "10 de Paus", kw: "Excesso de bagagem, dever cumprido com esforço, necessidade de aliviar fardos", ref: "O trabalhador carrega dez bastões pesados rumo à cidade próxima: a responsabilidade assumida exige medida.", adv: "Delegue o que não precisa carregar sozinho para não exaurir sua chama vital." },
+          { code: "pa", num: "Pajem", name: "Pajem de Paus", kw: "Boas notícias, entusiasmo jovem, mensageiro criativo, descoberta", ref: "No deserto fecundo, o jovem contempla a folha que brota no topo de seu cajado com admiração.", adv: "Acolha o espírito de aprendiz e deixe a curiosidade acender novas ideias." },
+          { code: "kn", num: "Cavaleiro", name: "Cavaleiro de Paus", kw: "Ação destemida, mudança rápida, viagem, paixão idealista", ref: "Montado em seu cavalo empinado, revestido de salamandras de fogo, ele avança sem hesitação.", adv: "Avance com ousadia e calor, mas cuide para não agir por mera impaciência." },
+          { code: "qu", num: "Rainha", name: "Rainha de Paus", kw: "Magnetismo solar, generosidade, autoconfiança, força espiritual", ref: "Com o girassol na mão e o gato preto aos pés, ela une calor humano, alegria radiante e intuição afiada.", adv: "Confie no seu brilho próprio e lidere pelo entusiasmo e acolhimento." },
+          { code: "ki", num: "Rei", name: "Rei de Paus", kw: "Visão nobre, liderança ética, mestre da ação, empreendedorismo", ref: "Governante maduro do elemento Fogo, sustenta o bastão florido com autoridade inspiradora e justa.", adv: "Assuma o comando da situação com visão larga, coragem e generosidade." }
+        ]
+      },
+      {
+        suit: "cups",
+        suitName: "Copas",
+        prefix: "cu",
+        element: "Água • Emoção, Afeto, Mediunidade & Cura",
+        cards: [
+          { code: "ac", num: "Ás", name: "Ás de Copas", kw: "Amor puro, bênção espiritual, abertura do coração, graça divina", ref: "A taça transborda cinco jorros de água cristalina enquanto a pomba da paz deposita a centelha sagrada.", adv: "Abra o coração para receber e oferecer afeto, perdão e sintonia espiritual." },
+          { code: "02", num: "II", name: "2 de Copas", kw: "Encontro de almas, parceria harmônica, reconciliação, respeito mútuo", ref: "Duas pessoas brindam sob o caduceu alado de Hermes, selando uma troca verdadeira de afeto e lealdade.", adv: "Valorize o diálogo afetuoso, a cooperação e as alianças baseadas na reciprocidade." },
+          { code: "03", num: "III", name: "3 de Copas", kw: "Alegria compartilhada, amizade, fraternidade, gratidão coletiva", ref: "Três jovens erguem suas taças em dança circular rodeadas pelos frutos da terra.", adv: "Partilhe suas alegrias com sua comunidade e cultive a leveza do convívio fraterno." },
+          { code: "04", num: "IV", name: "4 de Copas", kw: "Introspecção emocional, fastio, necessidade de despertar para novas bênçãos", ref: "Sentado sob a árvore, o jovem fixa as três taças no chão sem notar a quarta taça ofertada pela nuvem.", adv: "Saia do fechamento emocional e perceba as oportunidades presentes ao seu redor." },
+          { code: "05", num: "V", name: "5 de Copas", kw: "Desapontamento, luto necessário, aprendizado emocional, esperança remanescente", ref: "Envolto em manto escuro, olha para as três taças derramadas, mas duas permanecem de pé atrás dele junto à ponte.", adv: "Acolha o sentimento pela perda, mas vire-se para valorizar o que permanece íntegro." },
+          { code: "06", num: "VI", name: "6 de Copas", kw: "Ternura, raízes afetivas, pureza infantil, boas recordações", ref: "No jardim protegido, uma criança entrega à outra um cálice repleto de flores brancas.", adv: "Resgate a simplicidade do coração e honre as boas memórias que fortalecem sua alma." },
+          { code: "07", num: "VII", name: "7 de Copas", kw: "Múltiplos desejos, sonhos vívidos, necessidade de discernimento prático", ref: "Sete taças surgem nas nuvens exibindo joias, louros, dragões e mistérios que encantam a imaginação.", adv: "Separe a intuição real da fantasia dispersiva; escolha um objetivo concreto para realizar." },
+          { code: "08", num: "VIII", name: "8 de Copas", kw: "Busca espiritual mais profunda, desapego do que já não preenche", ref: "Sob o olhar sereno da lua, o viajante deixa oito taças arrumadas para subir a montanha em busca de sentido maior.", adv: "Tenha coragem de seguir adiante quando um ciclo emocional já cumpriu seu papel." },
+          { code: "09", num: "IX", name: "9 de Copas", kw: "Contentamento, bem-estar emocional, satisfação, plenitude", ref: "Com nove taças alinhadas em arco atrás de si, o anfitrião sorri em paz consigo mesmo.", adv: "Desfrute com gratidão das bênçãos presentes e permita-se sentir alegria genuína." },
+          { code: "10", num: "X", name: "10 de Copas", kw: "Paz familiar, bênção no lar, plenitude afetiva, arco-íris de aliança", ref: "Sob o arco-íris de dez taças, a família contempla o vale em perfeita comunhão e paz.", adv: "Cultive a harmonia no seu lar e irradie gratidão pelas conexões de amor da sua vida." },
+          { code: "pa", num: "Pajem", name: "Pajem de Copas", kw: "Sensibilidade psíquica, mensagem afetuosa, doçura, inspiração poética", ref: "À beira-mar, o jovem conversa com o peixe que emerge de dentro de sua taça: símbolo da escuta do inconsciente.", adv: "Escute os movimentos delicados da sua sensibilidade e expresse carinho sem receio." },
+          { code: "kn", num: "Cavaleiro", name: "Cavaleiro de Copas", kw: "Proposta gentil, idealismo amoroso, pacificador, busca do Graal", ref: "O cavaleiro avança com calma segurando o cálice como uma oferenda de paz e beleza.", adv: "Conduza suas ações com diplomacia, empatia e nobreza de sentimento." },
+          { code: "qu", num: "Rainha", name: "Rainha de Copas", kw: "Empatia profunda, mediunidade acolhedora, sabedoria do coração", ref: "Em seu trono à beira das águas, contempla um cálice fechado que só os olhos do espírito podem ver.", adv: "Acolha a si e aos outros com compaixão, mantendo seu campo energético sereno e protegido." },
+          { code: "ki", num: "Rei", name: "Rei de Copas", kw: "Maturidade emocional, conselheiro sereno, equilíbrio entre razão e afeto", ref: "Mesmo rodeado pelo mar agitado, seu trono permanece firme: ele conhece as profundezas sem se deixar afogar.", adv: "Seja o porto seguro na tempestade; aja com bondade madura e estabilidade interior." }
+        ]
+      },
+      {
+        suit: "swords",
+        suitName: "Espadas",
+        prefix: "sw",
+        element: "Ar • Mente, Verdade, Discernimento & Palavra",
+        cards: [
+          { code: "ac", num: "Ás", name: "Ás de Espadas", kw: "Corte da ilusão, clareza mental absoluta, decisão justa, triunfo da verdade", ref: "A espada erguida atravessa a coroa real adornada de oliveira e palma: o intelecto lúcido a serviço da justiça.", adv: "Use o discernimento para cortar dúvidas pela raiz e afirmar a verdade com clareza." },
+          { code: "02", num: "II", name: "2 de Espadas", kw: "Trégua mental, recolhimento para decidir, equilíbrio delicado", ref: "De olhos vendados diante do mar noturno, a figura cruza duas espadas sobre o peito em silêncio.", adv: "Não decida sob pressão externa; silencie a mente até sentir qual caminho é o verdadeiro." },
+          { code: "03", num: "III", name: "3 de Espadas", kw: "Compreensão de uma dor, catarse necessária, verdade libertadora", ref: "Três espadas transpassam o coração sob nuvens de chuva: a dor reconhecida permite que a cura comece.", adv: "Não reprima o que dói; acolha a verdade dos fatos para limpar o coração e seguir livre." },
+          { code: "04", num: "IV", name: "4 de Espadas", kw: "Repouso restaurador, retiro mental, meditação, recuperação de forças", ref: "A efígie do cavaleiro repousa em prece no silêncio da capela antes de retomar a jornada.", adv: "Conceda descanso à sua mente e ao seu corpo; o silêncio agora é o melhor remédio." },
+          { code: "05", num: "V", name: "5 de Espadas", kw: "Desgaste por orgulho, vitória vazia, necessidade de evitar disputas inúteis", ref: "Após o embate sob céu ventoso, percebe-se que ganhar uma discussão pode custar a paz.", adv: "Recuse entrar em provocações de vaidade; preserve sua paz mental." },
+          { code: "06", num: "VI", name: "6 de Espadas", kw: "Travessia tranquila, superação de turbulências, mudança de estado mental", ref: "O barqueiro conduz os passageiros de águas agitadas para uma margem calma e silenciosa.", adv: "Deixe as águas turvas do passado para trás; você está navegando rumo a um ciclo mais sereno." },
+          { code: "07", num: "VII", name: "7 de Espadas", kw: "Estratégia silenciosa, cautela, agir com inteligência e discrição", ref: "O homem recolhe cinco espadas no acampamento caminhando na ponta dos pés.", adv: "Seja discreto com seus planos e utilize a inteligência estratégica em vez do confronto direto." },
+          { code: "08", num: "VIII", name: "8 de Espadas", kw: "Bloqueio autoimposto, medo de avançar, necessidade de tirar a venda", ref: "Cercada por oito espadas na areia, a mulher está atada, mas o caminho à sua frente está aberto.", adv: "Perceba que os limites atuais são mais mentais do que reais; solte os pensamentos de impotência." },
+          { code: "09", num: "IX", name: "9 de Espadas", kw: "Preocupação excessiva, insônia mental, necessidade de entregar os medos à luz", ref: "Desperta na cama à noite, a figura cobre o rosto diante dos pensamentos que pesam no escuro.", adv: "Não alimente cenários pessimistas na mente; respire fundo, ore e traga os fatos para a luz do dia." },
+          { code: "10", num: "X", name: "10 de Espadas", kw: "Fim definitivo de um ciclo penoso, alvorada que surge no horizonte", ref: "Embora a noite tenha sido dura, o céu ao fundo já se abre no dourado do amanhecer.", adv: "O pior já passou. Solte de vez o ciclo encerrado e olhe para o novo dia que começa." },
+          { code: "pa", num: "Pajem", name: "Pajem de Espadas", kw: "Mente alerta, estudo atento, sinceridade, vigilância intelectual", ref: "Sobre o terreno ventoso, o jovem mantém a espada erguida e o olhar atento a tudo ao redor.", adv: "Mantenha a mente curiosa, observe os detalhes com atenção e comunique-se com clareza." },
+          { code: "kn", num: "Cavaleiro", name: "Cavaleiro de Espadas", kw: "Foco incisivo, defesa corajosa de ideias, rapidez de raciocínio", ref: "Galopando contra o vento, o cavaleiro corta o ar com determinação implacável.", adv: "Vá direto ao ponto com coragem intelectual, mas lembre-se de aliar a verdade à compaixão." },
+          { code: "qu", num: "Rainha", name: "Rainha de Espadas", kw: "Lucidez madura, independência mental, conselho honesto e certeiro", ref: "De perfil acima das nuvens, ela enxerga longe com sabedoria conquistada pela experiência.", adv: "Fale e decida com clareza, dignidade e limites bem estabelecidos." },
+          { code: "ki", num: "Rei", name: "Rei de Espadas", kw: "Sabedoria ética, justiça mental, mente ordenada, autoridade intelectual", ref: "Sentado de frente com a espada reta, julga os fatos com mente limpa, justa e superior.", adv: "Analise a questão com imparcialidade, lógica e elevado senso de justiça." }
+        ]
+      },
+      {
+        suit: "pentacles",
+        suitName: "Ouros",
+        prefix: "pe",
+        element: "Terra • Matéria, Trabalho, Saúde & Prosperidade",
+        cards: [
+          { code: "ac", num: "Ás", name: "Ás de Ouros", kw: "Semente de prosperidade, bênção material, saúde, realização concreta", ref: "A mão luminosa oferece o pantáculo de ouro sobre um jardim florido que se abre para as montanhas.", adv: "Plante no plano concreto: o momento é fértil para a estabilidade, saúde e bons frutos materiais." },
+          { code: "02", num: "II", name: "2 de Ouros", kw: "Equilíbrio dinâmico, adaptação financeira e prática, jogo de cintura", ref: "O jovem equilibra duas moedas dentro do laço do infinito enquanto os barcos navegam nas ondas ao fundo.", adv: "Administre suas tarefas e recursos com leveza, flexibilidade e ritmo constante." },
+          { code: "03", num: "III", name: "3 de Ouros", kw: "Trabalho bem feito, cooperação, maestria técnica, construção do templo", ref: "O artesão esculpe a catedral dialogando com os arquitetos que seguram a planta da obra.", adv: "Dedique capricho ao seu ofício e valorize a troca de saberes em equipe." },
+          { code: "04", num: "IV", name: "4 de Ouros", kw: "Conservação de recursos, prudência material, cuidado com o apego excessivo", ref: "Sentado com uma moeda na coroa, uma nos braços e duas sob os pés, protege o que conquistou.", adv: "Seja prudente com seus recursos e sua energia, mas não deixe o medo bloquear o fluxo natural da vida." },
+          { code: "05", num: "V", name: "5 de Ouros", kw: "Provação material passageira, solidariedade, lembrar do amparo espiritual", ref: "Dois caminhantes passam na neve diante do vitral iluminado de uma igreja sem notar a porta próxima.", adv: "Não hesite em pedir ou aceitar auxílio; olhe para cima e perceba a luz de amparo que está ao seu lado." },
+          { code: "06", num: "VI", name: "6 de Ouros", kw: "Partilha justa, caridade equilibrada, reciprocidade, fluxo de prosperidade", ref: "Com a balança numa mão, o mercador reparte moedas de forma justa a quem necessita.", adv: "Pratique a generosidade equilibrada: saiba tanto doar com sabedoria quanto receber com dignidade." },
+          { code: "07", num: "VII", name: "7 de Ouros", kw: "Paciência com a colheita, avaliação de resultados, maturação lenta", ref: "Apoiado na enxada, o lavrador contempla os frutos que amadurecem na planta que cultivou.", adv: "Respeite o tempo da natureza; não colha antes da hora e avalie com calma o que já cresceu." },
+          { code: "08", num: "VIII", name: "8 de Ouros", kw: "Aprimoramento constante, estudo aplicado, dedicação artesanal, disciplina", ref: "Em sua bancada, o artífice entalha cada pantáculo com atenção plena e amor ao detalhe.", adv: "Concentre-se no estudo e no aperfeiçoamento diário; a excelência nasce da constância." },
+          { code: "09", num: "IX", name: "9 de Ouros", kw: "Colheita farta, autonomia, paz no próprio jardim, dignidade conquistada", ref: "Rodeada por videiras carregadas, a dama caminha serena em seu jardim com o falcão pousado na mão.", adv: "Aprecie os frutos da sua disciplina e desfrute da sua independência com serenidade." },
+          { code: "10", num: "X", name: "10 de Ouros", kw: "Legado sólido, prosperidade familiar, ancestralidade honrada, segurança plena", ref: "Sob o arco da propriedade familiar, gerações convivem em paz dispostas na Árvore da Vida.", adv: "Construa pensando no longo prazo, honrando suas raízes e fortalecendo a base da sua família." },
+          { code: "pa", num: "Pajem", name: "Pajem de Ouros", kw: "Estudante dedicado, oportunidade prática, começo de um bom projeto", ref: "No campo arado e florido, o jovem examina o pantáculo com reverência e foco.", adv: "Aplique-se aos estudos práticos e cuide com zelo das novas sementes de trabalho." },
+          { code: "kn", num: "Cavaleiro", name: "Cavaleiro de Ouros", kw: "Perseverança, lealdade, método seguro, trabalhador incansável", ref: "Sobre um forte cavalo de tração diante do campo fértil, ele planeja a rota com paciência e firmeza.", adv: "Mantenha a constância passo a passo; a regularidade trará a realização segura." },
+          { code: "qu", num: "Rainha", name: "Rainha de Ouros", kw: "Cuidado concreto, abundância generosa, conexão com a terra e o corpo", ref: "Em seu trono cercado de rosas e natureza viva, ela segura a moeda como quem cuida da própria vida.", adv: "Nutra seu ambiente, cuide da saúde física e crie beleza e conforto ao seu redor." },
+          { code: "ki", num: "Rei", name: "Rei de Ouros", kw: "Mestre da realização material, fartura estável, proteção e generosidade prática", ref: "Rodeado de uvas maduras e castelos firmes, governa a matéria com sabedoria pacífica e farta.", adv: "Gerencie suas conquistas com maturidade, solidez e espírito construtivo." }
+        ]
+      }
+    ];
+
+    // Adicionar os 56 Arcanos Menores ao baralho principal
+    MINOR_SUITS.forEach(suitGroup => {
+      suitGroup.cards.forEach((c, idx) => {
+        TAROT_DECK.push({
+          id: `${suitGroup.prefix}${c.code}`,
+          num: c.num,
+          name: c.name,
+          suit: suitGroup.suit,
+          suitName: suitGroup.suitName,
+          element: suitGroup.element,
+          keywords: c.kw,
+          reflection: c.ref,
+          advice: c.adv,
+          img: `${IMG_BASE}${suitGroup.prefix}${c.code}.jpg`
+        });
+      });
+    });
+
+    // ==========================================
+    // ESTADO DA APLICAÇÃO
+    // ==========================================
+    let currentDailyCard = null;
+    let isDailyFlipped = false;
+    let isEpaperMode = true;
+
+    let spreadCards = [];
+    let spreadFlipped = [false, false, false];
+
+    // ==========================================
+    // GERADOR DETERMINÍSTICO POR DATA (YYYY-MM-DD)
+    // ==========================================
+    function getTodaySeedIndex(totalCards) {
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      // Algoritmo FNV-1a Hash para distribuição uniforme entre as 78 cartas
+      let hash = 2166136261;
+      for (let i = 0; i < dateStr.length; i++) {
+        hash ^= dateStr.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return Math.abs(hash) % totalCards;
+    }
+
+    // ==========================================
+    // INICIALIZAÇÃO
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('pt-BR', {
+        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+      });
+      document.getElementById('daily-date-label').textContent = formattedDate;
+
+      restoreDailySeedCard();
+      drawThreeSpread();
+      renderLibrary(TAROT_DECK);
+    });
+
+    // ==========================================
+    // LÓGICA: CARTA DO DIA (SEMPRE INICIA OCULTA)
+    // ==========================================
+    function loadCardIntoDailySlot(card, isRandomStudy = false) {
+      currentDailyCard = card;
+      
+      // 1. Garante que a carta comece virada para baixo (oculta)
+      isDailyFlipped = false;
+      const cardInner = document.getElementById('daily-card-inner');
+      cardInner.classList.remove('card-flipped');
+
+      // 2. Oculta completamente o container de detalhes e exibe o aviso de carta oculta
+      const detailsBox = document.getElementById('daily-card-details');
+      const promptBox = document.getElementById('daily-unrevealed-prompt');
+      detailsBox.style.display = 'none';
+      detailsBox.classList.remove('animate-reveal');
+      promptBox.style.display = 'block';
+
+      // 3. Atualiza cabeçalhos de modo
+      const heading = document.getElementById('daily-mode-heading');
+      const subtitle = document.getElementById('daily-mode-subtitle');
+      const restoreBtn = document.getElementById('btn-restore-daily');
+
+      if (isRandomStudy) {
+        heading.textContent = "Carta Avulsa de Estudo";
+        subtitle.textContent = "Lâmina sorteada aleatoriamente para reflexão pontual. Toque na carta para abrir.";
+        restoreBtn.classList.remove('hidden');
+      } else {
+        heading.textContent = "Sincronicidade Diária";
+        subtitle.textContent = "Calculada pela semente matemática da data de hoje. Permanece inalterada até a meia-noite.";
+        restoreBtn.classList.add('hidden');
+      }
+
+      // 4. Preenche os dados na face oculta (só ficarão visíveis quando o usuário virar a carta)
+      document.getElementById('daily-card-number').textContent = card.num;
+      document.getElementById('daily-card-suit-badge').textContent = card.suit === 'major' ? 'Arcano Maior' : `Naipe de ${card.suitName}`;
+      document.getElementById('daily-card-name').textContent = card.name;
+      
+      const imgEl = document.getElementById('daily-card-img');
+      attachImageWithFallback(imgEl, card);
+    }
+
+    function restoreDailySeedCard() {
+      const idx = getTodaySeedIndex(TAROT_DECK.length);
+      loadCardIntoDailySlot(TAROT_DECK[idx], false);
+    }
+
+    function drawRandomSingleCard() {
+      const randomIndex = Math.floor(Math.random() * TAROT_DECK.length);
+      loadCardIntoDailySlot(TAROT_DECK[randomIndex], true);
+    }
+
+    function toggleDailyFlip() {
+      if (!currentDailyCard) return;
+
+      const cardInner = document.getElementById('daily-card-inner');
+      const detailsBox = document.getElementById('daily-card-details');
+      const promptBox = document.getElementById('daily-unrevealed-prompt');
+
+      isDailyFlipped = !isDailyFlipped;
+
+      if (isDailyFlipped) {
+        // Vira a carta para cima
+        cardInner.classList.add('card-flipped');
+
+        // Preenche os textos no momento da revelação
+        document.getElementById('detail-type').textContent = currentDailyCard.suit === 'major' 
+          ? `Arcano Maior • Lâmina ${currentDailyCard.num}` 
+          : `Arcano Menor • ${currentDailyCard.suitName}`;
+        document.getElementById('detail-name').textContent = currentDailyCard.name;
+        document.getElementById('detail-element-pill').textContent = currentDailyCard.element;
+        document.getElementById('detail-keywords').textContent = currentDailyCard.keywords;
+        document.getElementById('detail-meaning').textContent = currentDailyCard.reflection;
+        document.getElementById('detail-advice').textContent = `"${currentDailyCard.advice}"`;
+
+        // Esconde o prompt e exibe os detalhes com animação
+        promptBox.style.display = 'none';
+        detailsBox.style.display = 'block';
+        detailsBox.classList.add('animate-reveal');
+      } else {
+        // Vira a carta de volta para baixo e oculta os detalhes
+        cardInner.classList.remove('card-flipped');
+        detailsBox.style.display = 'none';
+        detailsBox.classList.remove('animate-reveal');
+        promptBox.style.display = 'block';
+      }
+    }
+
+    // ==========================================
+    // LÓGICA: TIRAGEM DE 3 CARTAS (OCULTAS ATÉ CLICAR)
+    // ==========================================
+    function drawThreeSpread() {
+      // Embaralhamento Fisher-Yates para sorteio justo sem repetição
+      const copy = [...TAROT_DECK];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+
+      spreadCards = [copy[0], copy[1], copy[2]];
+      spreadFlipped = [false, false, false];
+
+      for (let i = 0; i < 3; i++) {
+        const card = spreadCards[i];
+        const inner = document.getElementById(`spread-card-inner-${i}`);
+        const promptEl = document.getElementById(`spread-prompt-${i}`);
+        const detailsEl = document.getElementById(`spread-details-${i}`);
+
+        // Garante que a carta inicie virada para baixo
+        inner.classList.remove('card-flipped');
+
+        // Oculta os significados e mostra apenas o aviso "Carta Oculta"
+        detailsEl.style.display = 'none';
+        detailsEl.classList.remove('animate-reveal');
+        promptEl.style.display = 'block';
+
+        // Carrega a imagem e cabeçalho na face oculta da carta
+        document.getElementById(`spread-num-${i}`).textContent = card.num;
+        document.getElementById(`spread-suit-${i}`).textContent = card.suit === 'major' ? 'Maior' : card.suitName;
+        document.getElementById(`spread-card-title-${i}`).textContent = card.name;
+        attachImageWithFallback(document.getElementById(`spread-img-${i}`), card);
+      }
+    }
+
+    function flipSpreadCard(index) {
+      if (!spreadCards[index]) return;
+
+      const card = spreadCards[index];
+      const inner = document.getElementById(`spread-card-inner-${index}`);
+      const promptEl = document.getElementById(`spread-prompt-${index}`);
+      const detailsEl = document.getElementById(`spread-details-${index}`);
+
+      spreadFlipped[index] = !spreadFlipped[index];
+
+      if (spreadFlipped[index]) {
+        inner.classList.add('card-flipped');
+
+        // Preenche os detalhes apenas quando a carta é revelada
+        document.getElementById(`spread-name-${index}`).textContent = card.name;
+        document.getElementById(`spread-element-${index}`).textContent = card.element;
+        document.getElementById(`spread-keywords-${index}`).textContent = card.keywords;
+        document.getElementById(`spread-meaning-${index}`).textContent = card.reflection;
+        document.getElementById(`spread-advice-${index}`).textContent = `Conselho: ${card.advice}`;
+
+        promptEl.style.display = 'none';
+        detailsEl.style.display = 'block';
+        detailsEl.classList.add('animate-reveal');
+      } else {
+        inner.classList.remove('card-flipped');
+        detailsEl.style.display = 'none';
+        detailsEl.classList.remove('animate-reveal');
+        promptEl.style.display = 'block';
+      }
+    }
+
+    function revealAllSpreadCards() {
+      for (let i = 0; i < 3; i++) {
+        if (!spreadFlipped[i]) {
+          flipSpreadCard(i);
+        }
+      }
+    }
+
+    // ==========================================
+    // LÓGICA: COMPÊNDIO DE ESTUDO (78 CARTAS)
+    // ==========================================
+    function renderLibrary(cards) {
+      const grid = document.getElementById('library-grid');
+      grid.innerHTML = '';
+
+      cards.forEach(card => {
+        const cardItem = document.createElement('div');
+        cardItem.className = 'border-2 border-borderline bg-paper p-2 rounded flex flex-col items-center cursor-pointer hover:bg-paper-dark transition shadow-xs group';
+        cardItem.onclick = () => openModal(card);
+
+        const imgWrapper = document.createElement('div');
+        imgWrapper.className = 'w-full aspect-[2/3.2] bg-white border border-borderline/50 overflow-hidden mb-2 flex items-center justify-center p-1';
+
+        const img = document.createElement('img');
+        img.className = `epaper-art w-full h-full object-contain group-hover:scale-105 transition duration-300 ${isEpaperMode ? '' : 'original-color'}`;
+        img.alt = card.name;
+        img.loading = 'lazy';
+        attachImageWithFallback(img, card);
+
+        imgWrapper.appendChild(img);
+
+        const title = document.createElement('span');
+        title.className = 'font-title text-xs font-bold text-center block w-full truncate text-ink';
+        title.textContent = card.name;
+
+        const sub = document.createElement('span');
+        sub.className = 'text-[10px] font-serif italic text-ink-muted';
+        sub.textContent = card.suit === 'major' ? `Arcano ${card.num}` : card.suitName;
+
+        cardItem.appendChild(imgWrapper);
+        cardItem.appendChild(title);
+        cardItem.appendChild(sub);
+        grid.appendChild(cardItem);
+      });
+    }
+
+    function filterLibrary(suitFilter) {
+      document.querySelectorAll('#view-library button[id^="filter-"]').forEach(btn => {
+        btn.classList.remove('bg-ink', 'text-paper');
+        btn.classList.add('bg-paper', 'text-ink');
+      });
+      const activeBtn = document.getElementById(`filter-${suitFilter}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-paper', 'text-ink');
+        activeBtn.classList.add('bg-ink', 'text-paper');
+      }
+
+      document.getElementById('library-search').value = '';
+
+      if (suitFilter === 'all') {
+        renderLibrary(TAROT_DECK);
+      } else {
+        renderLibrary(TAROT_DECK.filter(c => c.suit === suitFilter));
+      }
+    }
+
+    function searchLibrary(query) {
+      const q = query.toLowerCase().trim();
+      if (!q) {
+        renderLibrary(TAROT_DECK);
+        return;
+      }
+      const filtered = TAROT_DECK.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.element.toLowerCase().includes(q) ||
+        c.keywords.toLowerCase().includes(q) ||
+        c.reflection.toLowerCase().includes(q)
+      );
+      renderLibrary(filtered);
+    }
+
+    function openModal(card) {
+      document.getElementById('modal-card-category').textContent = card.suit === 'major'
+        ? `Arcano Maior • Lâmina ${card.num}`
+        : `Arcano Menor • Naipe de ${card.suitName}`;
+      document.getElementById('modal-card-title').textContent = card.name;
+      document.getElementById('modal-card-element').textContent = card.element;
+      document.getElementById('modal-card-keywords').textContent = card.keywords;
+      document.getElementById('modal-card-desc').textContent = card.reflection;
+      document.getElementById('modal-card-advice').textContent = `"${card.advice}"`;
+
+      const modalImg = document.getElementById('modal-card-img');
+      attachImageWithFallback(modalImg, card);
+
+      const modal = document.getElementById('modal-card');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal-card');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // ==========================================
+    // ALTERNÂNCIA DE MODO VISUAL (E-INK / COR 1909) E ABAS
+    // ==========================================
+    function toggleArtMode() {
+      isEpaperMode = !isEpaperMode;
+      const imgs = document.querySelectorAll('.epaper-art');
+      const label = document.getElementById('art-mode-label');
+      const dot = document.getElementById('art-mode-dot');
+
+      imgs.forEach(img => {
+        if (isEpaperMode) {
+          img.classList.remove('original-color');
+        } else {
+          img.classList.add('original-color');
+        }
+      });
+
+      if (isEpaperMode) {
+        label.textContent = 'E-Ink';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-ink inline-block';
+      } else {
+        label.textContent = 'Cor 1909';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-700 inline-block';
+      }
+    }
+
+    function switchView(viewName) {
+      ['daily', 'spread', 'library'].forEach(v => {
+        const section = document.getElementById(`view-${v}`);
+        const tab = document.getElementById(`tab-${v}`);
+        section.classList.add('hidden');
+        section.classList.remove('flex');
+        tab.classList.remove('bg-ink', 'text-paper', 'font-bold');
+        tab.classList.add('text-ink');
+      });
+
+      const activeSection = document.getElementById(`view-${viewName}`);
+      const activeTab = document.getElementById(`tab-${viewName}`);
+      activeSection.classList.remove('hidden');
+      activeSection.classList.add('flex');
+      activeTab.classList.add('bg-ink', 'text-paper', 'font-bold');
+      activeTab.classList.remove('text-ink');
+    }
+  </script>
+</body>
+</html>
